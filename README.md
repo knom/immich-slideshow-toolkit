@@ -31,17 +31,11 @@ npm install
 
 If you prefer not to install Node.js, TypeScript, and FFmpeg locally, you can run the scripts inside Docker.
 
-### 1. Build the Docker image
-```bash
-docker build -t immich-slideshow .
-```
-
-### 2. Run a script
 Example: generating a slideshow from Immich  
 ```bash
 docker run --rm \
   -v $(pwd)/output:/app/output \
-  immich-slideshow \
+  ghcr.io/knom/immich-slideshow-toolkit \
   ./immich-video-gen.ts \
     --url http://immich-server:2283/api \
     --album ALBUM_ID \
