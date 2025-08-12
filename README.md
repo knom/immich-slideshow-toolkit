@@ -1,9 +1,11 @@
 # Immich Slideshow Toolkit
 <p align="center" width="100%">
-<img alt="Typescript" src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff">
-<img alt="Built w. ChatGPT" src="https://img.shields.io/badge/ChatGPT-74aa9c?logo=openai&logoColor=white">
 <a href="https://github.com/knom/immich-slideshow-toolkit/releases/latest">
 <img alt="Latest release" src="https://badgen.net/github/release/knom/immich-slideshow-toolkit/stable"></a>
+<a href="https://github.com/knom/immich-slideshow-toolkit/pkgs/container/immich-slideshow-toolkit">
+<img alt="Image Pulls" src="https://ghcr-badge.elias.eu.org/shield/knom/immich-slideshow-toolkit/immich-slideshow-toolkit" height="20px"></a>
+<img alt="Typescript" src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff">
+<img alt="Built w. ChatGPT" src="https://img.shields.io/badge/ChatGPT-74aa9c?logo=openai&logoColor=white">
 <img alt="Using FFMPEG" height="20px" src="https://shields.io/badge/FFmpeg-%23171717.svg?logo=ffmpeg&style=for-the-badge&labelColor=171717&logoColor=5cb85c">
 </p>
 
