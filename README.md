@@ -1,8 +1,17 @@
 # Immich Slideshow Toolkit
+<p align="center" width="100%">
+<img alt="Typescript" src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff">
+<img alt="Built w. ChatGPT" src="https://img.shields.io/badge/ChatGPT-74aa9c?logo=openai&logoColor=white">
+<a href="https://github.com/knom/immich-slideshow-toolkit/releases/latest">
+<img alt="Latest release" src="https://badgen.net/github/release/knom/immich-slideshow-toolkit/stable"></a>
+<img alt="Using FFMPEG" height="20px" src="https://shields.io/badge/FFmpeg-%23171717.svg?logo=ffmpeg&style=for-the-badge&labelColor=171717&logoColor=5cb85c">
+</p>
 
 Three command-line tools to create **slideshow videos** from **[Immich](https://immich.app) albums**.
 
-<img src="https://raw.githubusercontent.com/immich-app/immich/refs/heads/main/design/immich-logo-inline-light.svg" width="200px">
+<p align="center" width="100%">
+<img src="logo.svg" width="200px">
+</p>
 
 ---
 
