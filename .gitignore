@@ -1,0 +1,12 @@
+*.mp3
+*.mp4
+*.png
+*.webp
+*.jpg
+*.jpeg
+node_modules/
+tsconfig.json
+*audio-config.json
+*.txt
+*.xspf
+*.sh
