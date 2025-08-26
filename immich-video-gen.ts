@@ -33,7 +33,8 @@ interface FfmpegImmichOptions extends OptionValues {
   photoDuration: string,
   fadeDuration: string,
   title: string,
-  ending: string
+  ending: string,
+  photoConfig: string
 }
 
 async function createSlideshowAsync(
@@ -98,11 +99,17 @@ async function createSlideshowAsync(
   // If ending video is provided, append it
   if (ending) batchVideoFiles.push(ending);
 
-  // // Concat all batch videos into one final video without any effect
-  await mergeAllPlainConcatAsync(
-    batchVideoFiles,
-    outputFile,
-  );
+  if (batchVideoFiles.length === 1) {
+    // If there's only one video, just rename it to the final output
+    fs.renameSync(batchVideoFiles[0], outputFile);
+  }
+  else {
+    // // Concat all batch videos into one final video without any effect
+    await mergeAllPlainConcatAsync(
+      batchVideoFiles,
+      outputFile,
+    );
+  }
 }
 
 
@@ -195,6 +202,19 @@ async function downloadImageAsync(apiUrl: string, id: string, outputPath: string
     writer.on("finish", resolve);
     writer.on("error", reject);
   });
+};
+
+async function fetchPhotosAsync(apiUrl: string,
+  token: string,
+  outputDir: string,
+  photoIdList: string[],
+): Promise<number> {
+  for (const [index, photoId] of photoIdList.entries()) {
+    const outputPath = path.join(outputDir, `photo_${index + 1}.jpg`);
+    await downloadImageAsync(apiUrl, photoId, outputPath, token);
+  }
+
+  return photoIdList.length;
 };
 
 // Function to fetch album images from Immich
@@ -422,6 +442,7 @@ async function mergeAllPlainConcatAsync(videoFiles: string[], outputFile: string
   program
     .name("immich-video-gen")
     .description("Fetch an Immich album and create a video")
+    .option('--photoConfig <file>', 'JSON file with ordered photo list')
     .option("-u, --url <url>", "Immich API base URL")
     .option("-a, --album <id>", "Album ID")
     .option("-t, --token <token>", "Authentication token")
@@ -439,12 +460,16 @@ async function mergeAllPlainConcatAsync(videoFiles: string[], outputFile: string
   const options = program.opts<FfmpegImmichOptions>();
 
   // either url, album, token are required or inputDir
-  if ((!options.url || !options.album || !options.token) && !options.inputDir) {
-    if (!options.url || !options.album || !options.token)
+  if ((!options.url || !options.album || !options.token) && !options.inputDir && (!options.url || !options.photoConfig || !options.token)) {
+    if (options.photoConfig && (!options.url || !options.token))
+      // If photoConfig is provided, ensure url and token are also present
+      console.error("❌ Missing required options: --url, --token");
+    else if (!options.url || !options.album || !options.token)
+      // else ensure url, album, and token are also present
       console.error("❌ Missing required options: --url, --album, --token");
     else if (!options.inputDir)
+      // else inputDir needs to be provided
       console.error("❌ Missing required option: --inputDir");
-
     program.help();
     process.exit(1);
   }
@@ -467,6 +492,23 @@ async function mergeAllPlainConcatAsync(videoFiles: string[], outputFile: string
     }
   }
 
+  if (options.photoConfig) {
+    if (!fs.existsSync(options.photoConfig)) {
+      console.error(`❌ Photo config does not exist: ${options.photoConfig}`);
+      process.exit(1);
+    }
+
+    if (options.inputDir) {
+      console.error("❌ Input directory cannot be combined with photo config");
+      process.exit(1);
+    }
+
+    if (options.album) {
+      console.error("❌ Album ID cannot be combined with photo config");
+      process.exit(1);
+    }
+  }
+
 
   try {
     // If inputDir is provided, use it directly
@@ -476,7 +518,20 @@ async function mergeAllPlainConcatAsync(videoFiles: string[], outputFile: string
         throw new Error(`Input directory does not exist: ${options.inputDir}`);
       }
     }
-    else {
+    else if (options.photoConfig) {
+      console.log(`Using photo config: ${options.photoConfig}`);
+
+      const photoConfigContent = await fs.promises.readFile(options.photoConfig, 'utf-8');
+      const photoConfig = JSON.parse(photoConfigContent);
+      if (!Array.isArray(photoConfig) || photoConfig.length === 0) {
+        console.error(`Invalid photo config: ${options.photoConfig}`);
+        process.exit(1);
+      }
+
+      const photoIdList = photoConfig.map((photo: { id: string; }) => photo.id) as string[];
+
+      await fetchPhotosAsync(options.url, options.token, options.outputDir, photoIdList);
+    } else {
       console.log("Fetching album...");
       await fetchAlbumAsync(
         options.url,
