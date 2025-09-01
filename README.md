@@ -23,10 +23,13 @@ Three command-line tools to create **slideshow videos** from **[Immich](https://
    Fetches an album from Immich (or uses a local folder of images) and generates a slideshow video with zoom & crossfade transitions.  
    Supports optional *title* and *ending* video segments.
 
-2. **`audio-config-gen.ts`**  
+2. **`title-gen.ts`**
+   Create a title and ending video from images.
+
+3. **`audio-config-gen.ts`**  
    Generates a JSON configuration describing how multiple MP3 files should be arranged (start/end times, fades) for a full-length background audio track.
 
-3. **`video-and-audio-merge.ts`**  
+4. **`video-and-audio-merge.ts`**  
    Merges a video with multiple audio files according to the JSON configuration, applying fades and synchronizing timing.
 
 ---
@@ -78,13 +81,21 @@ docker run --rm \
   --inputDir ./photos
 ```
 
+### Usage with photo config file
+
+```bash
+./immich-video-gen.ts \
+  --photoConfig ./photos.json
+```
+
 ### Key Options
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--url` | Immich API base URL | *required if fetching from Immich* |
 | `--album` | Album ID | *required if fetching from Immich* |
+| `--url` | Immich API base URL | *required if fetching from Immich* |
 | `--token` | Immich API key| *required if fetching from Immich* |
 | `--inputDir` | Local folder with images | *required if using images from local folder* |
+| `--photoConfig`| Image config file | *required if running with config instead of inputDir or album*
 | `--outputDir` | Directory for temp files | `./output` |
 | `--video` | Output video path | `./output/output_video-only.mp4` |
 | `--photoDuration` | Seconds each photo stays visible | `5` |
@@ -96,7 +107,27 @@ docker run --rm \
 
 ---
 
-## 2️⃣ Generating an Audio Config
+## 2️⃣ Generating a title & ending video
+
+Generates a title and ending mp4 files. The title is from an image, the ending is a black screen, each with a configurable duration.
+
+### Usage
+```bash
+./title-gen.ts -i intro.png
+```
+
+### Key Options
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--imagePath` | Path to the intro image | -- |
+| `--duration-title`| Duration of title video in seconds | `5` |
+| `--duration-ending` | Duration of ending video in seconds | `5` |
+| `--width` | Video width in pixels | `1920` |
+| `--height` | Video height in pixels | `1080` |
+| `--title` | Title video file name | `title.mp4` |
+| `--ending` | Ending (black screen) file name | `ending.mp4` |
+
+## 3️⃣ Generating an Audio Config
 
 Creates a JSON file describing how MP3 tracks will be played in sequence, including start/end times and fade durations.
 
@@ -138,7 +169,7 @@ Creates a JSON file describing how MP3 tracks will be played in sequence, includ
 
 ---
 
-## 3️⃣ Merging Video & Audio
+## 4️⃣ Merging Video & Audio
 
 Takes the slideshow video and the audio config JSON and merges them into a single MP4 file.
 

@@ -17,7 +17,7 @@ const program = new Command();
 
 program.name('title-gen')
   .description('Generate title and ending videos from an image')
-  .requiredOption('-i, --imagePath <path>', 'Path to input image file')
+  .requiredOption('-i, --imagePath <path>', 'Path to intro image file')
   .option('--duration-title <number>', 'Duration of title video in seconds', '5')
   .option('--duration-ending <number>', 'Duration of ending video in seconds', '5')
   .option('--width <number>', 'Video width in pixels', '1920')
