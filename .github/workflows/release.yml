@@ -39,25 +39,18 @@ jobs:
           VERSION=$(echo "$REF" | sed -e 's,.*/,,') # extract last part
 
           VERSION=$(echo $VERSION | sed -e 's/^v//')  # strip 'v' prefix
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            echo "Derived version must match X.Y"
+            exit 1
+          fi
 
           echo "IMAGE_ID=$IMAGE_ID"
           echo "VERSION=$VERSION"
 
-          # Tag and push the full minor version.
-          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
-          docker push $IMAGE_ID:$VERSION
-
-          # Split version into major and minor components.
-          IFS='.' read -r MAJOR MINOR <<< "$VERSION"
-
-          TAGS=("$MAJOR" "$MAJOR.$MINOR")
+          TAGS=("$VERSION" "latest")
 
           for TAG in "${TAGS[@]}"; do
             echo "Tagging $IMAGE_ID:$TAG"
             docker tag $IMAGE_NAME $IMAGE_ID:$TAG
             docker push $IMAGE_ID:$TAG
           done
-
-          echo "Tagging $IMAGE_ID:latest"
-          docker tag $IMAGE_NAME $IMAGE_ID:latest
-          docker push $IMAGE_ID:latest
