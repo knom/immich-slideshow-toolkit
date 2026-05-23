@@ -1,39 +1,25 @@
-name: Publish Release
+name: Publish Container Release
 
 on:
   push:
     tags:
-      - 'v*.*.*'  # Trigger on version tags like v1.2.3
+      - 'v*.*'
 
 jobs:
-  release:
+  release-container:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
       packages: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node/NPM
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-
-      - name: Restore NPM dependencies
-        run: npm install
-
-      - name: Zip output
+      - name: Validate version tag format
         run: |
-          zip -r ./release_${{ github.ref_name }}.zip .
-
-      - name: Create GitHub Release
-        uses: ncipollo/release-action@v1
-        with:
-          name: ${{ github.ref_name }}
-          artifacts: release_${{ github.ref_name }}.zip
-          body: |
-            Automated release of version ${{ github.ref_name }}
+          if [[ ! "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag must match vX.Y (for example v1.2)"
+            exit 1
+          fi
 
       - name: Build image
         run: |
@@ -52,46 +38,26 @@ jobs:
           REF=${{ github.ref }}
           VERSION=$(echo "$REF" | sed -e 's,.*/,,') # extract last part
 
-          IS_TAG=false
-          if [[ "$REF" == refs/tags/* ]]; then
-            IS_TAG=true
-            VERSION=$(echo $VERSION | sed -e 's/^v//')  # strip 'v' prefix
-          fi
+          VERSION=$(echo $VERSION | sed -e 's/^v//')  # strip 'v' prefix
 
           echo "IMAGE_ID=$IMAGE_ID"
           echo "VERSION=$VERSION"
-          echo "IS_TAG=$IS_TAG"
 
-          # Always tag and push the full version (either tag or branch name)
+          # Tag and push the full minor version.
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
 
-          if [ "$IS_TAG" = true ]; then
-            # Split version into components
-            IFS='.' read -r MAJOR MINOR PATCH REST <<< "$VERSION"
+          # Split version into major and minor components.
+          IFS='.' read -r MAJOR MINOR <<< "$VERSION"
 
-            TAGS=("$MAJOR")
-            if [[ -n "$MINOR" ]]; then
-              TAGS+=("$MAJOR.$MINOR")
-            fi
-            if [[ -n "$PATCH" ]]; then
-              TAGS+=("$MAJOR.$MINOR.$PATCH")
-            fi
+          TAGS=("$MAJOR" "$MAJOR.$MINOR")
 
-            for TAG in "${TAGS[@]}"; do
-              echo "Tagging $IMAGE_ID:$TAG"
-              docker tag $IMAGE_NAME $IMAGE_ID:$TAG
-              docker push $IMAGE_ID:$TAG
-            done
+          for TAG in "${TAGS[@]}"; do
+            echo "Tagging $IMAGE_ID:$TAG"
+            docker tag $IMAGE_NAME $IMAGE_ID:$TAG
+            docker push $IMAGE_ID:$TAG
+          done
 
-            # Also tag and push as latest
-            echo "Tagging $IMAGE_ID:latest"
-            docker tag $IMAGE_NAME $IMAGE_ID:latest
-            docker push $IMAGE_ID:latest
-
-          elif [ "$VERSION" = "main" ]; then
-            # Tag and push as nightly if branch is main
-            echo "Tagging $IMAGE_ID:nightly"
-            docker tag $IMAGE_NAME $IMAGE_ID:nightly
-            docker push $IMAGE_ID:nightly
-          fi
+          echo "Tagging $IMAGE_ID:latest"
+          docker tag $IMAGE_NAME $IMAGE_ID:latest
+          docker push $IMAGE_ID:latest
